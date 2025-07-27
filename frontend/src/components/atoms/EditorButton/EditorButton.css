@@ -1,0 +1,12 @@
+.editor-button {
+    outline: none;
+    background-color: rgba(0, 0, 0, 0.555);
+    width: 120px;
+    height: 30;
+    text-align: center;
+    padding: 2px;
+    margin-left: 25px;
+    color: white;
+    border-color: rgb(71, 69, 69);
+
+}
