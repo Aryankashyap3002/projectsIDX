@@ -7,17 +7,23 @@ export const handleContainerCreate = async (projectId, terminalSocket, req, tcpS
     
     try {
 
-        const existingContainer = await dockerode.listContainers({
-            name: projectId
-        })
+         const allContainers = await dockerode.listContainers({ all: true });
 
-        if(existingContainer.length > 0) {
-            const container = dockerode.getContainer(existingContainer[0].id);
+         const existingContainer = allContainers.find(container => {
+            // Docker container names start with '/', so we check both formats
+            return container.Names.some(name => 
+                name === `/${projectId}` || name === projectId
+            );
+        });
+
+        if(existingContainer) {
+            const container = dockerode.getContainer(existingContainer.Id); 
             await container.remove({force: true}); 
+            console.log("Removed existing container:", existingContainer.Id);
         }
 
 
-
+        console.log("Creating a new container");
         const container = await dockerode.createContainer({
             Image: 'sandbox',
             AttachStdout: true,
@@ -29,7 +35,7 @@ export const handleContainerCreate = async (projectId, terminalSocket, req, tcpS
             ExposedPorts: {
                     "5173/tcp": {}
             },
-            Env: ["Host=0.0.0.0"],
+            Env: ["HOST=0.0.0.0"],
             HostConfig: {
                 Binds: [
                     `${process.cwd()}/projects/${projectId}:/home/sandbox/app`
@@ -48,14 +54,41 @@ export const handleContainerCreate = async (projectId, terminalSocket, req, tcpS
 
         await container.start();
 
-        console.log("Container is started");
+        // console.log("Container is started");
 
-        terminalSocket.handleUpgrade(req, tcpSocket, head, (establishedWSConn) => {
-            terminalSocket.emit("connection", establishedWSConn, req, container);
-        })
+        // terminalSocket.handleUpgrade(req, tcpSocket, head, (establishedWSConn) => {
+        //     terminalSocket.emit("connection", establishedWSConn, req, container);
+        // })
+
+        return container;
 
     } catch (error) {
         console.log("Error while creating container", error);
+    }
+}
+
+export async function getContainerPort(containerName) {
+
+    const allContainers = await dockerode.listContainers({ all: true });
+
+    const existingContainer = allContainers.find(container => {
+            // Docker container names start with '/', so we check both formats
+            return container.Names.some(name => 
+                name === `/${containerName}` || name === containerName
+            );
+        });
+
+
+    if(existingContainer) {
+        const containerInfo = await dockerode.getContainer(existingContainer.Id).inspect();
+        console.log("Container info", containerInfo);
+        if (containerInfo.NetworkSettings.Ports["5173/tcp"] && 
+            containerInfo.NetworkSettings.Ports["5173/tcp"].length > 0) {
+            return containerInfo.NetworkSettings.Ports["5173/tcp"][0].HostPort;
+        } else {
+            console.log("Port 5173 not found or not mapped");
+            return null;
+        }
     }
 }
 

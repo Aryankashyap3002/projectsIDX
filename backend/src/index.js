@@ -4,11 +4,9 @@ import apiRoutes from "./route/index.js"
 import { createServer } from 'http';
 import { Server } from "socket.io";
 import cors from 'cors';
-import { handleEditorSocketEvent } from "./socketHandler/editoHandler.js";
+import { handleEditorSocketEvent } from "./socketHandler/editorHandler.js";
 import queryString from "query-string";
-import { handleContainerCreate } from "./handleContainerCreate/handleContainerCreate.js";
-import { WebSocketServer } from "ws";
-import { handleTerminalCreation } from "./handleTerminalCreation/handleTerminalCreation.js";
+
 
 const app = express();
 
@@ -39,6 +37,7 @@ editorNamespace.on('connection', (socket) => {
     const queryParams = queryString.parse(socket.handshake);
     console.log(queryParams);
     const projectId = socket.request._query.projectId;
+    console.log("Project id received after connection", projectId);
 
     handleEditorSocketEvent(socket, editorNamespace)
 });
@@ -46,44 +45,4 @@ editorNamespace.on('connection', (socket) => {
 server.listen(PORT, () => {
     console.log("Server is running on port ", PORT);
 });
-
-const webSocketForTerminal = new WebSocketServer({
-    noServer: true
-});
-
-webSocketForTerminal.on("connection", (ws, req, container) => {
-    console.log("Terminal is connected");
-    console.log(container);
-    handleTerminalCreation(container, ws);
-
-    ws.on("getport", () => {
-        console.log("Port is received");
-    })
-
-    ws.on("close", () => {
-        container.remove({ force: true }, (err, data) => {
-            if(err) {
-                console.log("Error while removing container", err);
-            }
-            console.log("container removed", data);
-        })
-    })
-})
-
-server.on("upgrade", (req, tcp, head) => {
-    const isTerminal = req.url.includes("/terminal");
-
-    if(isTerminal) {
-        console.log("req url received", req.url);
-        const projectId = req.url.split('=').pop();
-        console.log("Project received after connection", projectId);
-        handleContainerCreate(projectId, webSocketForTerminal, req, tcp, head);
-    }
-});
-
-
-
-
-
-
 
