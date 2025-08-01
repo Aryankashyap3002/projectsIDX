@@ -15,11 +15,28 @@ export default function ProjectPlayGround () {
 
     const { setProjectId, projectId } = useTreeStructureStore();
 
-    const { setEditorSocket } = useEditorSocketStore();
+    const { setEditorSocket, editorSocket} = useEditorSocketStore();
 
     const { maxCount } = useActiveFileButtonStore();
 
     const { setTerminalSocket} = useTerminalSocketStore();
+
+    function fetchPort () {
+        console.log(editorSocket);
+        editorSocket?.emit("getPort", { containerName: projectIdFromURL});
+        console.log("fetching port");
+        editorSocket?.on("getPortSuccess", (data) => {
+            console.log("port is: ", data);
+        })
+    }
+
+    useEffect(() => {
+        // editorSocket?.emit("getPort", { containerName: projectIdFromURL});
+        // console.log("fetching port")
+        // editorSocket?.on("getPortSuccess", (data) => {
+        //     console.log("port is: ", data);
+        // })
+    }, [projectIdFromURL, editorSocket])
 
     useEffect(() => {
         if(projectIdFromURL) {
@@ -31,7 +48,7 @@ export default function ProjectPlayGround () {
             );
             setEditorSocket(editorSocketConnections);
 
-            const ws = new WebSocket("ws://localhost:3000/terminal?projectId="+projectIdFromURL);
+            const ws = new WebSocket("ws://localhost:4000/terminal?projectId="+projectIdFromURL);
             setTerminalSocket(ws)
         }
         console.log(projectIdFromURL);
@@ -71,8 +88,9 @@ export default function ProjectPlayGround () {
                     <div>
                         <EditorComponent />
                     </div>
-
+                    
                     <div>
+                        <button onClick={fetchPort}>GET PORT</button>
                         <BrowserTerminal />
                     </div>
                 </div>
