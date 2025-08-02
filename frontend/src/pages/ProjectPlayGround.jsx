@@ -9,6 +9,7 @@ import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { BrowserTerminal } from "@/components/molecules/BrowserTerminal/BrowserTerminal";
 import { useTerminalSocketStore } from "@/store/terminalSocketStore";
+import { Browser } from "@/components/organisms/Browser/Browser";
 
 export default function ProjectPlayGround () {
     const { projectId: projectIdFromURL } = useParams();
@@ -19,24 +20,14 @@ export default function ProjectPlayGround () {
 
     const { maxCount } = useActiveFileButtonStore();
 
-    const { setTerminalSocket} = useTerminalSocketStore();
+    const { terminalSocket, setTerminalSocket} = useTerminalSocketStore();
 
     function fetchPort () {
         console.log(editorSocket);
         editorSocket?.emit("getPort", { containerName: projectIdFromURL});
         console.log("fetching port");
-        editorSocket?.on("getPortSuccess", (data) => {
-            console.log("port is: ", data);
-        })
+        
     }
-
-    useEffect(() => {
-        // editorSocket?.emit("getPort", { containerName: projectIdFromURL});
-        // console.log("fetching port")
-        // editorSocket?.on("getPortSuccess", (data) => {
-        //     console.log("port is: ", data);
-        // })
-    }, [projectIdFromURL, editorSocket])
 
     useEffect(() => {
         if(projectIdFromURL) {
@@ -92,6 +83,9 @@ export default function ProjectPlayGround () {
                     <div>
                         <button onClick={fetchPort}>GET PORT</button>
                         <BrowserTerminal />
+                    </div>
+                    <div>
+                        {terminalSocket && <Browser projectId={projectIdFromURL}/>}
                     </div>
                 </div>
                 

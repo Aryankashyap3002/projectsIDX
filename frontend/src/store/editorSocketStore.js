@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import { useActiveFileTabStore } from "./activeFileTabStote";
-import { usePort } from "./portStore";
+import { usePortStore } from "./portStore";
 
 export const useEditorSocketStore = create((set) => ({
     editorSocket: null,
     setEditorSocket: (socket) => {
         const activeFileTabSetter = useActiveFileTabStore.getState().setActiveFileTab;
-        const portSetter = usePort.getState().setPort;
+        const portSetter = usePortStore.getState().setPort;
         socket.on("readFileSuccess", (args) => {
             
             activeFileTabSetter(args.path, args.data, args.extension);
@@ -21,7 +21,8 @@ export const useEditorSocketStore = create((set) => ({
         });
 
         socket?.on("getPortSuccess", ({ port }) => {
+            console.log("port data: ", port)
             portSetter(port);
-        })
+        });
     }
-}))
+}));
