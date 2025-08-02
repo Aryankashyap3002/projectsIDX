@@ -1,7 +1,9 @@
 import { usePortStore } from "@/store/portStore";
-import { Input } from "@/components/ui/input"
 import { useEffect, useRef } from "react";
 import { useEditorSocketStore } from "@/store/editorSocketStore";
+import { Input } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
+// import { RotateCcw } from 'lucide-react';
 
 export const Browser = ({ projectId }) => {
     const { port } = usePortStore();
@@ -26,13 +28,20 @@ export const Browser = ({ projectId }) => {
         </>
     }
 
+    function handleRefresh() {
+        if(browserRef.current) {
+            const oldAddr = browserRef.current.src;
+            browserRef.current.src = oldAddr;
+        }
+    }
+
     return (
         <div
             style={{
                 backgroundColor: "#22212b"
             }}
         >
-            <Input 
+            <Input
                 style={{
                     width: "100%",
                     height: "30px",
@@ -40,7 +49,10 @@ export const Browser = ({ projectId }) => {
                     fontFamily: "Fira Code",
                     backgroundColor: "#282a35"
                 }}
+                prefix={<ReloadOutlined onClick={handleRefresh}/>}
                 defaultValue={`http://localhost:${port}`}
+
+                
             />
 
             <iframe 
