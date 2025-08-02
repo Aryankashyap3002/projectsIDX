@@ -37,11 +37,17 @@ export default function ProjectPlayGround () {
                     query: `projectId=${projectIdFromURL}`
                 }
             );
-            setEditorSocket(editorSocketConnections);
+            
 
             const ws = new WebSocket("ws://localhost:4000/terminal?projectId="+projectIdFromURL);
-            setTerminalSocket(ws)
+            setTerminalSocket(ws);
+            setEditorSocket(editorSocketConnections);
+            
         }
+
+        // if(terminalSocket) {
+        //     editorSocket?.emit("getPort", { containerName: projectIdFromURL});
+        // }
         console.log(projectIdFromURL);
         
     }, [setProjectId, projectIdFromURL,setEditorSocket, setTerminalSocket])
@@ -85,7 +91,7 @@ export default function ProjectPlayGround () {
                         <BrowserTerminal />
                     </div>
                     <div>
-                        {terminalSocket && <Browser projectId={projectIdFromURL}/>}
+                        {projectIdFromURL && terminalSocket && <Browser projectId={projectIdFromURL}/>}
                     </div>
                 </div>
                 

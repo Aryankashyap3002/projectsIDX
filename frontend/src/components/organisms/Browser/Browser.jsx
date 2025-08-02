@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import { useEditorSocketStore } from "@/store/editorSocketStore";
 import { Input } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
-// import { RotateCcw } from 'lucide-react';
 
 export const Browser = ({ projectId }) => {
     const { port } = usePortStore();
@@ -12,13 +11,17 @@ export const Browser = ({ projectId }) => {
     const browserRef = useRef(null);
 
     useEffect(() => {
-    if(!port && editorSocket) {
+    if(!port) {
         const timer = setTimeout(() => {
             console.log("Port not found, fetching after delay");
             editorSocket.emit("getPort", { containerName: projectId});
         }, 100);
 
         return () => clearTimeout(timer);
+
+        // editorSocket?.emit("getPort", {
+        //     containerName: projectId
+        // })
     }
 }, [port, editorSocket, projectId]);
 
@@ -51,8 +54,6 @@ export const Browser = ({ projectId }) => {
                 }}
                 prefix={<ReloadOutlined onClick={handleRefresh}/>}
                 defaultValue={`http://localhost:${port}`}
-
-                
             />
 
             <iframe 
