@@ -8,9 +8,10 @@ import { useTerminalSocketStore } from '@/store/terminalSocketStore';
 export const BrowserTerminal = () => {
     const terminalRef = useRef(null);
     const socketRef = useRef(null);
+    const termRef = useRef(null);
+    const fitAddonRef = useRef(null);
 
     const { terminalSocket } = useTerminalSocketStore();
-
 
     useEffect(() => {
         const term = new Terminal({
@@ -35,6 +36,10 @@ export const BrowserTerminal = () => {
         term.open(terminalRef.current); 
         fitAddon.fit();
 
+        // Store references for resize handling
+        termRef.current = term;
+        fitAddonRef.current = fitAddon;
+
         if(terminalSocket) {
             terminalSocket.onopen = () => {
                 const attachAddon = new AttachAddon(terminalSocket);
@@ -42,9 +47,30 @@ export const BrowserTerminal = () => {
                 socketRef.current = terminalSocket;
             }
         }
-        
+
+        // Handle window resize
+        const handleResize = () => {
+            if (fitAddonRef.current && termRef.current) {
+                setTimeout(() => {
+                    fitAddonRef.current.fit();
+                }, 10);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        // Create a ResizeObserver to watch for container size changes
+        const resizeObserver = new ResizeObserver(() => {
+            handleResize();
+        });
+
+        if (terminalRef.current) {
+            resizeObserver.observe(terminalRef.current);
+        }
 
         return () => {
+            window.removeEventListener('resize', handleResize);
+            resizeObserver.disconnect();
             term.dispose();
         }
 
@@ -56,10 +82,11 @@ export const BrowserTerminal = () => {
         <div
             ref={terminalRef}
             style={{
-                height: "20vh",
+                height: "100%", 
+                width: "100%",
                 outline: 'none',
                 border: 'none',
-                overflow: 'auto'
+                overflow: 'hidden' 
             }}
         >
 
