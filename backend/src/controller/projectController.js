@@ -2,7 +2,8 @@ import { projectService, projectTreeService, getAllProjectService } from "../ser
 
 export async function projectController(req, res) {
     try {
-        const projectId = await projectService();
+        console.log("projectName: ",req.body.name);
+        const projectId = await projectService(req.body.name);
         return res.status(201).json({
             msg: "Project created successfully",
             data: projectId,

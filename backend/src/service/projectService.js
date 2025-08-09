@@ -4,12 +4,13 @@ import { REACT_PROJECT_COMMAND } from '../config/serverConfig.js';
 import { execPromisified } from '../utils/projectUtil.js';
 import { walkDirectory } from '../utils/projectTreeUtil.js';
 
-export async function projectService () {
+export async function projectService (name) {
     const projectId = uuid4();
+    console.log("Name of Project is: ", name);
     await fs.mkdir(`./projects/${projectId}`);
     console.log("project Id ", projectId);
 
-    await execPromisified(REACT_PROJECT_COMMAND, {
+    await execPromisified(`npm create vite@latest ${name} -- --template react --yes`, {
         cwd: `./projects/${projectId}`
     });
 
