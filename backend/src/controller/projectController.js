@@ -1,4 +1,4 @@
-import { projectService, projectTreeService } from "../service/projectService.js";
+import { projectService, projectTreeService, getAllProjectService } from "../service/projectService.js";
 
 export async function projectController(req, res) {
     try {
@@ -23,6 +23,21 @@ export async function projectTreeController(req, res) {
     } catch (err) {
         console.error("Error creating project:", err);
         return res.status(500).json({ error: "Can't fetch projectTree" });
+    }
+}
+
+export async function getAllProjectController(req, res) {
+    try {
+       const projects = await getAllProjectService();
+       return res.status(201).json({
+        msg: "Successfully fetched all projects",
+        data: projects
+       });
+    } catch (error) {
+        console.log("Error while fetching projects", error);
+        return res.status(500).json({
+            error: "Projects fetching get failed"
+        });
     }
 }
                      

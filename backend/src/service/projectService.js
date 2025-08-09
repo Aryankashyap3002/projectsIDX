@@ -2,7 +2,6 @@ import { v4 as uuid4 } from 'uuid';
 import fs from 'fs/promises'
 import { REACT_PROJECT_COMMAND } from '../config/serverConfig.js';
 import { execPromisified } from '../utils/projectUtil.js';
-import path from 'path';
 import { walkDirectory } from '../utils/projectTreeUtil.js';
 
 export async function projectService () {
@@ -22,3 +21,20 @@ export async function projectTreeService(projectId) {
     const projectTreePath = walkDirectory(projectPath);
     return projectTreePath;
 } 
+
+export async function getAllProjectService() {
+    const projectPath = `./projects/`;
+    const projects = await fs.readdir(projectPath, {withFileType: true}, (err, dirents) => {
+        if(err) {
+            console.error('Error reading directory:', err);
+            return;
+        }
+
+        const folders = dirents.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+
+        console.log("projects are :", folders);
+        return folders;
+    });
+    console.log("Projects are :", projects);
+    return projects;
+}

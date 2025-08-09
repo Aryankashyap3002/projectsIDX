@@ -64,5 +64,5 @@ function processStreamOutput(stream, ws) {
         return output;
     }
 
-    stream.on("data", processStreamData); // Fixed: was stream("data", processStreamOutput)
+    stream.on("data", processStreamData); 
 }

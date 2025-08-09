@@ -166,7 +166,7 @@ export const handleEditorSocketEvent = (socket, editorNamespace) => {
         const port = await getContainerPort(containerName);
         console.log("port data", port);
         socket.emit("getPortSuccess", {
-            data: port
+            port: port
         })
     });
 }
