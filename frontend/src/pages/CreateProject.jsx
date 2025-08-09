@@ -9,9 +9,17 @@ export function CreateProject() {
     const { isPending, createProjectMutation } = useCreateProject();
     const { projects, setProjects } = useGetProjectsStore();
     const [projectList, setProjectList] = useState(null);
+    const [projectName, setProjectName] = useState("");
+    const [showForm, setShowForm] = useState(false);
     const navigate = useNavigate();
 
     async function handleClick() {
+        if (!showForm) {
+            setShowForm(true);
+            return;
+        }
+        
+        // If form is showing, this means we're in "quick create" mode
         try {
             const response = await createProjectMutation();
             console.log(response.data);
@@ -19,6 +27,27 @@ export function CreateProject() {
         } catch (error) {
             console.log(error);
         }
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        if (!projectName.trim()) {
+            alert("Please enter a project name");
+            return;
+        }
+
+        try {
+            const response = await createProjectMutation({ name: projectName });
+            console.log("Created project with name:", projectName, response.data);
+            navigate(`/project/${response?.data}`);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    function handleCancel() {
+        setShowForm(false);
+        setProjectName("");
     }
 
     useEffect(() => {
@@ -43,7 +72,9 @@ export function CreateProject() {
                         <div className="loading-dot"></div>
                         <div className="loading-dot"></div>
                     </div>
-                    <h2 className="loading-title">Loading...</h2>
+                    <h2 className="loading-title">
+                        {projectName ? `Creating "${projectName}"...` : "Loading..."}
+                    </h2>
                 </div>
             </div>
         )
@@ -71,15 +102,62 @@ export function CreateProject() {
                         Get Projects
                     </Button>
                     
-                    <Button
-                        onClick={handleClick}
-                        className="create-project-btn"
-                    >
-                        <svg className="btn-icon" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Create New Project
-                    </Button>
+                    {!showForm ? (
+                        <Button
+                            onClick={handleClick}
+                            className="create-project-btn"
+                        >
+                            <svg className="btn-icon" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Create New Project
+                        </Button>
+                    ) : (
+                        <div className="project-form-container">
+                            <form onSubmit={handleFormSubmit} className="project-form">
+                                <div className="form-input-group">
+                                    <input
+                                        type="text"
+                                        placeholder="Enter project name"
+                                        value={projectName}
+                                        onChange={(e) => setProjectName(e.target.value)}
+                                        className="project-name-input"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div className="form-buttons">
+                                    <button 
+                                        type="button" 
+                                        onClick={handleCancel}
+                                        className="cancel-btn"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="submit-btn"
+                                        disabled={!projectName.trim()}
+                                    >
+                                        <svg className="btn-icon" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        Create Project
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            {/* Quick Create Option */}
+                            <div className="quick-create-option">
+                                <span className="divider-text">or</span>
+                                <button 
+                                    onClick={handleClick}
+                                    className="quick-create-btn"
+                                >
+                                    Quick Create (Auto-generated name)
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Projects List */}
@@ -120,7 +198,7 @@ export function CreateProject() {
                             ) : (
                                 <div className="empty-state">
                                     <svg className="empty-state-icon" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                     </svg>
                                     <p className="empty-state-title">No projects found</p>
                                     <p className="empty-state-subtitle">Create your first project to get started</p>
