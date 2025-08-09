@@ -21,3 +21,15 @@ export async function getProjectTree ({ projectId }) {
         throw error;
     }
 } 
+
+export async function getAllProjects () {
+    try {
+        const response = await axios.get('/api/v1/projects/allProjects');
+        console.log("Projects are: ", response.data?.data);
+        return response.data;
+    } catch (error) {
+        console.log(error);
+        throw error;
+        
+    }
+}

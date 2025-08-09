@@ -4,7 +4,7 @@ import { TreeStructure } from "@/components/organisms/TreeStructure/TreeStructur
 import { useActiveFileButtonStore } from "@/store/activeFileButtonStore";
 import { useEditorSocketStore } from "@/store/editorSocketStore";
 import { useTreeStructureStore } from "@/store/treeStructureStore";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { BrowserTerminal } from "@/components/molecules/BrowserTerminal/BrowserTerminal";
@@ -23,199 +23,236 @@ export default function ProjectPlayGround() {
     const { maxCount } = useActiveFileButtonStore();
     const { terminalSocket, setTerminalSocket } = useTerminalSocketStore();
 
-    // State for panel widths
-    const [treeWidth, setTreeWidth] = useState(300);
-    const [browserWidth, setBrowserWidth] = useState(400);
-    const [terminalHeight, setTerminalHeight] = useState(0);
+    // Optimized state management
+    const [panelSizes, setPanelSizes] = useState({
+        tree: 300,
+        browser: 400,
+        terminal: 0
+    });
     
-    // Browser control states
-    const [isBrowserMinimized, setIsBrowserMinimized] = useState(false);
-    const [isBrowserMaximized, setIsBrowserMaximized] = useState(false);
-    const [isBrowserClosed, setIsBrowserClosed] = useState(false);
-    const [browserBeforeMaximize, setBrowserBeforeMaximize] = useState(400);
+    const [browserState, setBrowserState] = useState({
+        isMinimized: false,
+        isMaximized: false,
+        isClosed: false,
+        beforeMaximize: 400
+    });
     
     const containerRef = useRef(null);
     const isResizing = useRef(false);
 
-    function fetchPort() {
-        console.log(editorSocket);
-        editorSocket?.emit("getPort", { containerName: projectIdFromURL });
-        console.log("fetching port");
-    }
+    // Memoize socket connection to prevent unnecessary re-renders
+    const socketConnection = useMemo(() => {
+        if (!projectIdFromURL) return null;
+        
+        return {
+            editor: io(`${import.meta.env.VITE_BACKEND_URL}/editor`, {
+                query: `projectId=${projectIdFromURL}`
+            }),
+            terminal: new WebSocket(`ws://localhost:4000/terminal?projectId=${projectIdFromURL}`)
+        };
+    }, [projectIdFromURL]);
 
-    useEffect(() => {
-        if (projectIdFromURL) {
-            setProjectId(projectIdFromURL);
-            var editorSocketConnections = io(`${import.meta.env.VITE_BACKEND_URL}/editor`,
-                {
-                    query: `projectId=${projectIdFromURL}`
-                }
-            );
-
-            const ws = new WebSocket("ws://localhost:4000/terminal?projectId=" + projectIdFromURL);
-            setTerminalSocket(ws);
-            setEditorSocket(editorSocketConnections);
+    // Optimized fetch port function
+    const fetchPort = useCallback(() => {
+        if (editorSocket) {
+            editorSocket.emit("getPort", { containerName: projectIdFromURL });
         }
-    }, [setProjectId, projectIdFromURL, setEditorSocket, setTerminalSocket]);
+    }, [editorSocket, projectIdFromURL]);
 
-    // Tree resize handler
-    const handleTreeResize = (e) => {
-        if (!isResizing.current) return;
+    // Initialize connections only once
+    useEffect(() => {
+        if (projectIdFromURL && socketConnection) {
+            setProjectId(projectIdFromURL);
+            setEditorSocket(socketConnection.editor);
+            setTerminalSocket(socketConnection.terminal);
+        }
+
+        // Cleanup on unmount
+        return () => {
+            if (socketConnection?.editor) {
+                socketConnection.editor.disconnect();
+            }
+            if (socketConnection?.terminal) {
+                socketConnection.terminal.close();
+            }
+        };
+    }, [projectIdFromURL, socketConnection, setProjectId, setEditorSocket, setTerminalSocket]);
+
+    // Optimized resize handlers with useCallback
+    const handleTreeResize = useCallback((e) => {
+        if (!isResizing.current || !containerRef.current) return;
         
         const containerRect = containerRef.current.getBoundingClientRect();
         const newWidth = Math.max(200, Math.min(500, e.clientX - containerRect.left));
-        setTreeWidth(newWidth);
-    };
+        setPanelSizes(prev => ({ ...prev, tree: newWidth }));
+    }, []);
 
-    // Browser resize handler
-    const handleBrowserResize = (e) => {
-        if (!isResizing.current) return;
+    const handleBrowserResize = useCallback((e) => {
+        if (!isResizing.current || !containerRef.current) return;
         
         const containerRect = containerRef.current.getBoundingClientRect();
         const newWidth = Math.max(300, Math.min(600, containerRect.right - e.clientX));
-        setBrowserWidth(newWidth);
-    };
+        setPanelSizes(prev => ({ ...prev, browser: newWidth }));
+    }, []);
 
-    // Browser control handlers
-    const handleBrowserClose = () => {
-        setIsBrowserClosed(true);
-        setIsBrowserMinimized(false);
-        setIsBrowserMaximized(false);
-        setBrowserWidth(0);
-    };
+    // Optimized browser control handlers
+    const handleBrowserClose = useCallback(() => {
+        setBrowserState({
+            isMinimized: false,
+            isMaximized: false,
+            isClosed: true,
+            beforeMaximize: browserState.beforeMaximize
+        });
+        setPanelSizes(prev => ({ ...prev, browser: 0 }));
+    }, [browserState.beforeMaximize]);
 
-    const handleBrowserRestore = () => {
-        setIsBrowserClosed(false);
-        setIsBrowserMinimized(false);
-        setIsBrowserMaximized(false);
-        setBrowserWidth(400); // Default width
-    };
+    const handleBrowserRestore = useCallback(() => {
+        setBrowserState({
+            isMinimized: false,
+            isMaximized: false,
+            isClosed: false,
+            beforeMaximize: 400
+        });
+        setPanelSizes(prev => ({ ...prev, browser: 400 }));
+    }, []);
 
-    const handleBrowserMinimize = () => {
-        if (isBrowserMinimized) {
-            // Restore from minimized
-            setIsBrowserMinimized(false);
-            setBrowserWidth(isBrowserMaximized ? window.innerWidth * 0.6 : browserBeforeMaximize);
-        } else {
-            // Minimize
-            setIsBrowserMinimized(true);
-            setBrowserBeforeMaximize(browserWidth);
-            setBrowserWidth(60); // Just show the header
-        }
-    };
+    const handleBrowserMinimize = useCallback(() => {
+        setBrowserState(prev => {
+            const newMinimized = !prev.isMinimized;
+            setPanelSizes(sizes => ({ 
+                ...sizes, 
+                browser: newMinimized ? 60 : (prev.isMaximized ? window.innerWidth * 0.6 : prev.beforeMaximize)
+            }));
+            
+            return {
+                ...prev,
+                isMinimized: newMinimized,
+                beforeMaximize: newMinimized ? panelSizes.browser : prev.beforeMaximize
+            };
+        });
+    }, [panelSizes.browser]);
 
-    const handleBrowserMaximize = () => {
-        if (isBrowserMaximized) {
-            // Restore from maximized
-            setIsBrowserMaximized(false);
-            setBrowserWidth(browserBeforeMaximize);
-        } else {
-            // Maximize
-            setIsBrowserMaximized(true);
-            setBrowserBeforeMaximize(browserWidth);
-            setBrowserWidth(window.innerWidth * 0.6); // Take 60% of screen
-        }
-        setIsBrowserMinimized(false);
-    };
+    const handleBrowserMaximize = useCallback(() => {
+        setBrowserState(prev => {
+            const newMaximized = !prev.isMaximized;
+            setPanelSizes(sizes => ({ 
+                ...sizes, 
+                browser: newMaximized ? window.innerWidth * 0.6 : prev.beforeMaximize
+            }));
+            
+            return {
+                ...prev,
+                isMaximized: newMaximized,
+                isMinimized: false,
+                beforeMaximize: newMaximized ? panelSizes.browser : prev.beforeMaximize
+            };
+        });
+    }, [panelSizes.browser]);
 
-    // Mouse event handlers
-    const startTreeResize = () => {
+    // Optimized mouse event handlers
+    const startResize = useCallback((type) => {
         isResizing.current = true;
-        document.addEventListener('mousemove', handleTreeResize);
+        const handler = type === 'tree' ? handleTreeResize : handleBrowserResize;
+        
+        document.addEventListener('mousemove', handler);
         document.addEventListener('mouseup', stopResize);
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
-    };
+    }, [handleTreeResize, handleBrowserResize]);
 
-    const startBrowserResize = () => {
-        isResizing.current = true;
-        document.addEventListener('mousemove', handleBrowserResize);
-        document.addEventListener('mouseup', stopResize);
-        document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none';
-    };
-
-    const stopResize = () => {
+    const stopResize = useCallback(() => {
         isResizing.current = false;
         document.removeEventListener('mousemove', handleTreeResize);
         document.removeEventListener('mousemove', handleBrowserResize);
         document.removeEventListener('mouseup', stopResize);
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
-    };
+    }, [handleTreeResize, handleBrowserResize]);
 
-    const editorWidth = `calc(100vw - ${treeWidth}px - ${browserWidth}px - 8px)`; // 8px for resize handles
+    // Memoize calculated widths
+    const editorWidth = useMemo(() => 
+        `calc(100vw - ${panelSizes.tree}px - ${panelSizes.browser}px - 8px)`,
+        [panelSizes.tree, panelSizes.browser]
+    );
+
+    // Memoize browser controls
+    const browserControls = useMemo(() => (
+        <div className="flex items-center gap-3">
+            <div 
+                onClick={handleBrowserClose}
+                className="w-3 h-3 bg-red-500 rounded-full cursor-pointer hover:bg-red-400 transition-colors"
+                title="Close Browser"
+            />
+            <div 
+                onClick={handleBrowserMinimize}
+                className="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer hover:bg-yellow-400 transition-colors"
+                title={browserState.isMinimized ? "Restore Browser" : "Minimize Browser"}
+            />
+            <div 
+                onClick={handleBrowserMaximize}
+                className="w-3 h-3 bg-green-500 rounded-full cursor-pointer hover:bg-green-400 transition-colors"
+                title={browserState.isMaximized ? "Restore Browser" : "Maximize Browser"}
+            />
+        </div>
+    ), [handleBrowserClose, handleBrowserMinimize, handleBrowserMaximize, browserState.isMinimized, browserState.isMaximized]);
 
     return (
         <div 
             ref={containerRef}
-            className="h-screen w-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 overflow-hidden flex"
+            className="h-screen w-screen bg-slate-900 overflow-hidden flex"
         >
-            {/* TreeStructure - Fixed width */}
+            {/* TreeStructure */}
             {projectId && (
                 <>
                     <div 
-                        style={{ width: `${treeWidth}px` }}
-                        className="bg-slate-950/90 backdrop-blur-sm border-r border-slate-700/50 shadow-2xl flex-shrink-0"
+                        style={{ width: `${panelSizes.tree}px` }}
+                        className="bg-slate-950 border-r border-slate-700 flex-shrink-0"
                     >
-                        <div className="h-full p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
+                        <div className="h-full p-4 overflow-y-auto">
                             <TreeStructure />
                         </div>
                     </div>
                     
-                    {/* Tree resize handle */}
                     <div 
-                        onMouseDown={startTreeResize}
-                        className="w-1 bg-slate-700/50 hover:bg-slate-600 transition-colors cursor-col-resize flex-shrink-0"
+                        onMouseDown={() => startResize('tree')}
+                        className="w-1 bg-slate-700 hover:bg-slate-600 cursor-col-resize flex-shrink-0"
                     />
                 </>
             )}
 
-            {/* Main Content Area - Editor + Terminal - Flexible width */}
+            {/* Main Content Area */}
             <div 
                 style={{ width: editorWidth }}
                 className="flex flex-col flex-shrink-0"
             >
-                {/* Vertical Terminal Resizing */}
                 <ResizablePanelGroup direction="vertical" className="h-full">
-                    {/* Editor Section */}
                     <ResizablePanel defaultSize={100} minSize={20}>
-                        <div className="h-full flex flex-col bg-slate-900/80 backdrop-blur-sm">
-                            {/* Editor Tabs */}
+                        <div className="h-full flex flex-col bg-slate-900">
                             {maxCount > 0 && (
-                                <div style={{
-                                    backgroundColor: "black",
-                                    height: '50px',
-                                }}>
+                                <div className="bg-black h-12">
                                     <EditorButtons />
                                 </div>
                             )}
-
-                            {/* Editor Component */}
-                            <div className="flex-1 min-h-0 bg-slate-900/90 backdrop-blur-sm border border-slate-700/30 rounded-tl-lg shadow-inner">
+                            <div className="flex-1 min-h-0 bg-slate-900 border border-slate-700 rounded-tl-lg">
                                 <EditorComponent />
                             </div>
                         </div>
                     </ResizablePanel>
 
-                    <ResizableHandle className="h-1 bg-slate-700/50 hover:bg-slate-600 transition-colors" />
+                    <ResizableHandle className="h-1 bg-slate-700 hover:bg-slate-600" />
 
-                    {/* Terminal Section */}
                     <ResizablePanel defaultSize={0} minSize={0} maxSize={80}>
-                        <div className="h-full bg-slate-950/95 backdrop-blur-sm border-t border-slate-700/50 shadow-2xl">
+                        <div className="h-full bg-slate-950 border-t border-slate-700">
                             <div className="h-full flex flex-col">
-                                {/* Terminal Header */}
-                                <div className="h-12 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center px-4 shadow-lg">
+                                <div className="h-12 bg-slate-800 border-b border-slate-700 flex items-center px-4">
                                     <button 
                                         onClick={fetchPort}
-                                        className="px-4 py-2 bg-blue-600/80 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 backdrop-blur-sm border border-blue-500/30"
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors"
                                     >
                                         GET PORT
                                     </button>
-                                    <div className="ml-4 text-slate-400 text-sm font-medium">Terminal</div>
+                                    <div className="ml-4 text-slate-400 text-sm">Terminal</div>
                                 </div>
-                                
-                                {/* Terminal Content */}
                                 <div className="flex-1 overflow-hidden">
                                     <BrowserTerminal />
                                 </div>
@@ -225,71 +262,44 @@ export default function ProjectPlayGround() {
                 </ResizablePanelGroup>
             </div>
 
-            {/* Browser resize handle - only show if browser is not closed */}
-            {!isBrowserClosed && (
+            {/* Browser resize handle */}
+            {!browserState.isClosed && (
                 <div 
-                    onMouseDown={startBrowserResize}
-                    className="w-1 bg-slate-700/50 hover:bg-slate-600 transition-colors cursor-col-resize flex-shrink-0"
+                    onMouseDown={() => startResize('browser')}
+                    className="w-1 bg-slate-700 hover:bg-slate-600 cursor-col-resize flex-shrink-0"
                 />
             )}
 
-            {/* Browser Panel or Restore Button */}
-            {!isBrowserClosed ? (
+            {/* Browser Panel */}
+            {!browserState.isClosed ? (
                 <div 
-                    style={{ width: `${browserWidth}px` }}
-                    className="bg-slate-950/90 backdrop-blur-sm border-l border-slate-700/50 shadow-2xl flex-shrink-0"
+                    style={{ width: `${panelSizes.browser}px` }}
+                    className="bg-slate-950 border-l border-slate-700 flex-shrink-0"
                 >
                     <div className="h-full flex flex-col">
-                        {/* Browser Header */}
-                        <div className="h-14 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center px-4 shadow-lg">
-                            <div className="flex items-center gap-3">
-                                {/* Close Button - Red */}
-                                <div 
-                                    onClick={handleBrowserClose}
-                                    className="w-3 h-3 bg-red-500 rounded-full shadow-sm cursor-pointer hover:bg-red-400 transition-colors flex items-center justify-center group"
-                                    title="Close Browser"
-                                >
-                                    <span className="text-red-900 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">×</span>
-                                </div>
-                                
-                                {/* Minimize Button - Yellow */}
-                                <div 
-                                    onClick={handleBrowserMinimize}
-                                    className="w-3 h-3 bg-yellow-500 rounded-full shadow-sm cursor-pointer hover:bg-yellow-400 transition-colors flex items-center justify-center group"
-                                    title={isBrowserMinimized ? "Restore Browser" : "Minimize Browser"}
-                                >
-                                    <span className="text-yellow-900 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">−</span>
-                                </div>
-                                
-                                {/* Maximize Button - Green */}
-                                <div 
-                                    onClick={handleBrowserMaximize}
-                                    className="w-3 h-3 bg-green-500 rounded-full shadow-sm cursor-pointer hover:bg-green-400 transition-colors flex items-center justify-center group"
-                                    title={isBrowserMaximized ? "Restore Browser" : "Maximize Browser"}
-                                >
-                                    <span className="text-green-900 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {isBrowserMaximized ? "□" : "+"}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="ml-4 text-slate-300 text-sm font-medium">
-                                Browser Preview {isBrowserMinimized && "(Minimized)"} {isBrowserMaximized && "(Maximized)"}
+                        <div className="h-14 bg-slate-800 border-b border-slate-700 flex items-center px-4">
+                            {browserControls}
+                            <div className="ml-4 text-slate-300 text-sm">
+                                Browser Preview 
+                                {browserState.isMinimized && " (Minimized)"}
+                                {browserState.isMaximized && " (Maximized)"}
                             </div>
                         </div>
                         
-                        {/* Browser Content */}
-                        <div className={`flex-1 overflow-hidden bg-white/5 backdrop-blur-sm transition-all duration-300 ${isBrowserMinimized ? 'opacity-0 h-0' : 'opacity-100'}`}>
-                            {projectIdFromURL && terminalSocket && !isBrowserMinimized ? (
+                        <div className={`flex-1 overflow-hidden bg-white/5 transition-all duration-200 ${
+                            browserState.isMinimized ? 'opacity-0 h-0' : 'opacity-100'
+                        }`}>
+                            {projectIdFromURL && terminalSocket && !browserState.isMinimized ? (
                                 <Browser projectId={projectIdFromURL} />
-                            ) : !isBrowserMinimized ? (
+                            ) : !browserState.isMinimized ? (
                                 <div className="h-full flex items-center justify-center">
                                     <div className="text-center p-8">
-                                        <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4 mx-auto">
+                                        <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mb-4 mx-auto">
                                             <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
                                             </svg>
                                         </div>
-                                        <h3 className="text-slate-300 text-lg font-medium mb-2">Browser Preview</h3>
+                                        <h3 className="text-slate-300 text-lg mb-2">Browser Preview</h3>
                                         <p className="text-slate-500 text-sm">
                                             {!projectIdFromURL ? "No project loaded" : "Waiting for terminal connection..."}
                                         </p>
@@ -300,18 +310,17 @@ export default function ProjectPlayGround() {
                     </div>
                 </div>
             ) : (
-                /* Browser Restore Button - Shows when browser is closed */
                 <div className="fixed top-4 right-4 z-50">
                     <button 
                         onClick={handleBrowserRestore}
-                        className="bg-slate-800/90 hover:bg-slate-700 border border-slate-600/50 backdrop-blur-sm px-4 py-2 rounded-lg shadow-xl transition-all duration-200 hover:shadow-2xl transform hover:scale-105 group"
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-2 rounded-lg transition-colors"
                         title="Restore Browser Panel"
                     >
                         <div className="flex items-center gap-2 text-slate-300">
-                            <svg className="w-5 h-5 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span className="text-sm font-medium group-hover:text-white transition-colors">Show Browser</span>
+                            <span className="text-sm">Show Browser</span>
                         </div>
                     </button>
                 </div>
