@@ -179,13 +179,13 @@ export function CreateProject() {
                                         <div
                                             key={index}
                                             className="project-item"
-                                            onClick={() => handleOpenExistingProject(project)}
+                                            onClick={() => handleOpenExistingProject(project.id)}
                                         >
                                             <div className="project-item-content">
                                                 <div className="project-item-left">
                                                     <div className="project-indicator"></div>
                                                     <span className="project-name">
-                                                        {project}
+                                                        {project.name}
                                                     </span>
                                                 </div>
                                                 <svg className="project-arrow" viewBox="0 0 24 24">
