@@ -4,7 +4,7 @@ import { projectController, projectTreeController, getAllProjectController } fro
 const router = express.Router();
 
 router.post('/', projectController);
-router.post('/:projectId/tree', projectTreeController);
+router.get('/:projectId/tree', projectTreeController);
 router.get('/allProjects', getAllProjectController);
 
 export default router;

@@ -9,8 +9,11 @@ export async function projectService (name) {
     console.log("Name of Project is: ", name);
     await fs.mkdir(`./projects/${projectId}`);
     console.log("project Id ", projectId);
-
-    await execPromisified(`npm create vite@latest ${name} -- --template react --yes`, {
+    const sanitizedName = name.replace(/[^a-zA-Z0-9-_]/g, '').toLowerCase();
+    if (!sanitizedName) {
+        throw new Error('Project name is invalid or empty');
+    }
+    await execPromisified(`npm create vite@latest ${sanitizedName} -- --template react --yes`, {
         cwd: `./projects/${projectId}`
     });
 
