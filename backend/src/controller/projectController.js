@@ -30,7 +30,8 @@ export async function projectTreeController(req, res) {
 export async function getAllProjectController(req, res) {
     try {
        const projects = await getAllProjectService();
-       return res.status(201).json({
+       console.log("Projects before response:", projects);
+       return res.status(200).json({
         msg: "Successfully fetched all projects",
         data: projects
        });

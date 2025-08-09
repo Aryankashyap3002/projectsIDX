@@ -1,8 +1,8 @@
 import { v4 as uuid4 } from 'uuid';
 import fs from 'fs/promises'
-import { REACT_PROJECT_COMMAND } from '../config/serverConfig.js';
 import { execPromisified } from '../utils/projectUtil.js';
 import { walkDirectory } from '../utils/projectTreeUtil.js';
+import path from 'path';
 
 export async function projectService (name) {
     const projectId = uuid4();
@@ -24,21 +24,37 @@ export async function projectTreeService(projectId) {
     const projectPath = `./projects/${projectId}`;
     const projectTreePath = walkDirectory(projectPath);
     return projectTreePath;
-} 
+}
 
 export async function getAllProjectService() {
-    const projectPath = `./projects/`;
-    const projects = await fs.readdir(projectPath, {withFileType: true}, (err, dirents) => {
-        if(err) {
-            console.error('Error reading directory:', err);
-            return;
-        }
-
-        const folders = dirents.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
-
-        console.log("projects are :", folders);
-        return folders;
-    });
-    console.log("Projects are :", projects);
-    return projects;
+    const projectPath = './projects/';
+    
+    try {
+        const projectIds = await fs.readdir(projectPath, { withFileTypes: true });
+        const projectFolders = projectIds.filter(dirent => dirent.isDirectory());
+        
+        // Use Promise.all for parallel processing
+        const projectNames = await Promise.all(
+            projectFolders.map(async (projectFolder) => {
+                try {
+                    const subDirPath = path.join(projectPath, projectFolder.name);
+                    const subDirs = await fs.readdir(subDirPath, { withFileTypes: true });
+                    const subFolder = subDirs.find(dirent => dirent.isDirectory());
+                    return subFolder ? subFolder.name : null;
+                } catch (error) {
+                    console.error(`Error reading ${projectFolder.name}:`, error);
+                    return null;
+                }
+            })
+        );
+        
+        // Filter out null values
+        const validProjectNames = projectNames.filter(name => name !== null);
+        console.log('Valid project names:', validProjectNames);
+        return validProjectNames;
+        
+    } catch (err) {
+        console.error('Error reading directory:', err);
+        return [];
+    }
 }
