@@ -1,0 +1,314 @@
+/* ProjectPlayGround.css */
+
+.playground-container {
+  height: 100vh;
+  width: 100vw;
+  background-color: #0f172a;
+  overflow: hidden;
+  display: flex;
+}
+
+.tree-panel {
+  background-color: #020617;
+  border-right: 1px solid #334155;
+  flex-shrink: 0;
+}
+
+.tree-content {
+  height: 100%;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.resize-handle {
+  width: 4px;
+  background-color: #334155;
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.resize-handle:hover {
+  background-color: #475569;
+}
+
+.main-editor-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #0f172a;
+}
+
+.editor-buttons-bar {
+  background-color: black;
+  height: 3rem;
+}
+
+.editor-content {
+  flex: 1;
+  min-height: 0;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-top-left-radius: 0.5rem;
+}
+
+.resizable-handle-horizontal {
+  height: 4px;
+  background-color: #334155;
+  cursor: row-resize;
+}
+
+.resizable-handle-horizontal:hover {
+  background-color: #475569;
+}
+
+.terminal-panel {
+  height: 100%;
+  background-color: #020617;
+  border-top: 1px solid #334155;
+}
+
+.terminal-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-header {
+  height: 3rem;
+  background-color: #1e293b;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.terminal-get-port-btn {
+  padding: 0.5rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.terminal-get-port-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.terminal-title {
+  margin-left: 1rem;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.terminal-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.browser-panel {
+  background-color: #020617;
+  border-left: 1px solid #334155;
+  flex-shrink: 0;
+}
+
+.browser-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.browser-header {
+  height: 3.5rem;
+  background-color: #1e293b;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.browser-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.browser-control-btn {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.browser-control-close {
+  background-color: #ef4444;
+}
+
+.browser-control-close:hover {
+  background-color: #dc2626;
+}
+
+.browser-control-minimize {
+  background-color: #eab308;
+}
+
+.browser-control-minimize:hover {
+  background-color: #ca8a04;
+}
+
+.browser-control-maximize {
+  background-color: #22c55e;
+}
+
+.browser-control-maximize:hover {
+  background-color: #16a34a;
+}
+
+.browser-title {
+  margin-left: 1rem;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+}
+
+.browser-content {
+  flex: 1;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+}
+
+.browser-content.minimized {
+  opacity: 0;
+  height: 0;
+}
+
+.browser-content.normal {
+  opacity: 1;
+}
+
+.browser-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.browser-placeholder-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.browser-placeholder-icon {
+  width: 4rem;
+  height: 4rem;
+  background-color: #334155;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.browser-placeholder-icon svg {
+  width: 2rem;
+  height: 2rem;
+  color: #64748b;
+}
+
+.browser-placeholder-title {
+  color: #cbd5e1;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.browser-placeholder-text {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.restore-button {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+}
+
+.restore-button-content {
+  background-color: #1e293b;
+  border: 1px solid #475569;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.restore-button-content:hover {
+  background-color: #334155;
+}
+
+.restore-button-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #cbd5e1;
+}
+
+.restore-button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.restore-button-text {
+  font-size: 0.875rem;
+}
+
+/* Utility classes for dynamic styling */
+.user-select-none {
+  user-select: none;
+}
+
+.cursor-col-resize {
+  cursor: col-resize;
+}
+
+.cursor-row-resize {
+  cursor: row-resize;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tree-panel {
+    position: absolute;
+    left: -100%;
+    z-index: 100;
+    width: 300px;
+    transition: left 0.3s ease;
+  }
+  
+  .tree-panel.mobile-open {
+    left: 0;
+  }
+  
+  .browser-panel {
+    position: absolute;
+    right: -100%;
+    z-index: 100;
+    width: 100%;
+    max-width: 400px;
+    transition: right 0.3s ease;
+  }
+  
+  .browser-panel.mobile-open {
+    right: 0;
+  }
+}

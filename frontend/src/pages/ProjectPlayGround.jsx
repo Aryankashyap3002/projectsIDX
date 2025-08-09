@@ -15,6 +15,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
+import './ProjectPlayGround.css';
 
 export default function ProjectPlayGround() {
     const { projectId: projectIdFromURL } = useParams();
@@ -157,7 +158,7 @@ export default function ProjectPlayGround() {
         document.addEventListener('mousemove', handler);
         document.addEventListener('mouseup', stopResize);
         document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none';
+        document.body.classList.add('user-select-none');
     }, [handleTreeResize, handleBrowserResize]);
 
     const stopResize = useCallback(() => {
@@ -166,7 +167,7 @@ export default function ProjectPlayGround() {
         document.removeEventListener('mousemove', handleBrowserResize);
         document.removeEventListener('mouseup', stopResize);
         document.body.style.cursor = '';
-        document.body.style.userSelect = '';
+        document.body.classList.remove('user-select-none');
     }, [handleTreeResize, handleBrowserResize]);
 
     // Memoize calculated widths
@@ -177,20 +178,20 @@ export default function ProjectPlayGround() {
 
     // Memoize browser controls
     const browserControls = useMemo(() => (
-        <div className="flex items-center gap-3">
+        <div className="browser-controls">
             <div 
                 onClick={handleBrowserClose}
-                className="w-3 h-3 bg-red-500 rounded-full cursor-pointer hover:bg-red-400 transition-colors"
+                className="browser-control-btn browser-control-close"
                 title="Close Browser"
             />
             <div 
                 onClick={handleBrowserMinimize}
-                className="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer hover:bg-yellow-400 transition-colors"
+                className="browser-control-btn browser-control-minimize"
                 title={browserState.isMinimized ? "Restore Browser" : "Minimize Browser"}
             />
             <div 
                 onClick={handleBrowserMaximize}
-                className="w-3 h-3 bg-green-500 rounded-full cursor-pointer hover:bg-green-400 transition-colors"
+                className="browser-control-btn browser-control-maximize"
                 title={browserState.isMaximized ? "Restore Browser" : "Maximize Browser"}
             />
         </div>
@@ -199,23 +200,23 @@ export default function ProjectPlayGround() {
     return (
         <div 
             ref={containerRef}
-            className="h-screen w-screen bg-slate-900 overflow-hidden flex"
+            className="playground-container"
         >
             {/* TreeStructure */}
             {projectId && (
                 <>
                     <div 
                         style={{ width: `${panelSizes.tree}px` }}
-                        className="bg-slate-950 border-r border-slate-700 flex-shrink-0"
+                        className="tree-panel"
                     >
-                        <div className="h-full p-4 overflow-y-auto">
+                        <div className="tree-content">
                             <TreeStructure />
                         </div>
                     </div>
                     
                     <div 
                         onMouseDown={() => startResize('tree')}
-                        className="w-1 bg-slate-700 hover:bg-slate-600 cursor-col-resize flex-shrink-0"
+                        className="resize-handle"
                     />
                 </>
             )}
@@ -223,37 +224,37 @@ export default function ProjectPlayGround() {
             {/* Main Content Area */}
             <div 
                 style={{ width: editorWidth }}
-                className="flex flex-col flex-shrink-0"
+                className="main-editor-area"
             >
                 <ResizablePanelGroup direction="vertical" className="h-full">
                     <ResizablePanel defaultSize={100} minSize={20}>
-                        <div className="h-full flex flex-col bg-slate-900">
+                        <div className="editor-container">
                             {maxCount > 0 && (
-                                <div className="bg-black h-12">
+                                <div className="editor-buttons-bar">
                                     <EditorButtons />
                                 </div>
                             )}
-                            <div className="flex-1 min-h-0 bg-slate-900 border border-slate-700 rounded-tl-lg">
+                            <div className="editor-content">
                                 <EditorComponent />
                             </div>
                         </div>
                     </ResizablePanel>
 
-                    <ResizableHandle className="h-1 bg-slate-700 hover:bg-slate-600" />
+                    <ResizableHandle className="resizable-handle-horizontal" />
 
                     <ResizablePanel defaultSize={0} minSize={0} maxSize={80}>
-                        <div className="h-full bg-slate-950 border-t border-slate-700">
-                            <div className="h-full flex flex-col">
-                                <div className="h-12 bg-slate-800 border-b border-slate-700 flex items-center px-4">
+                        <div className="terminal-panel">
+                            <div className="terminal-container">
+                                <div className="terminal-header">
                                     <button 
                                         onClick={fetchPort}
-                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors"
+                                        className="terminal-get-port-btn"
                                     >
                                         GET PORT
                                     </button>
-                                    <div className="ml-4 text-slate-400 text-sm">Terminal</div>
+                                    <div className="terminal-title">Terminal</div>
                                 </div>
-                                <div className="flex-1 overflow-hidden">
+                                <div className="terminal-content">
                                     <BrowserTerminal />
                                 </div>
                             </div>
@@ -266,7 +267,7 @@ export default function ProjectPlayGround() {
             {!browserState.isClosed && (
                 <div 
                     onMouseDown={() => startResize('browser')}
-                    className="w-1 bg-slate-700 hover:bg-slate-600 cursor-col-resize flex-shrink-0"
+                    className="resize-handle"
                 />
             )}
 
@@ -274,33 +275,33 @@ export default function ProjectPlayGround() {
             {!browserState.isClosed ? (
                 <div 
                     style={{ width: `${panelSizes.browser}px` }}
-                    className="bg-slate-950 border-l border-slate-700 flex-shrink-0"
+                    className="browser-panel"
                 >
-                    <div className="h-full flex flex-col">
-                        <div className="h-14 bg-slate-800 border-b border-slate-700 flex items-center px-4">
+                    <div className="browser-container">
+                        <div className="browser-header">
                             {browserControls}
-                            <div className="ml-4 text-slate-300 text-sm">
+                            <div className="browser-title">
                                 Browser Preview 
                                 {browserState.isMinimized && " (Minimized)"}
                                 {browserState.isMaximized && " (Maximized)"}
                             </div>
                         </div>
                         
-                        <div className={`flex-1 overflow-hidden bg-white/5 transition-all duration-200 ${
-                            browserState.isMinimized ? 'opacity-0 h-0' : 'opacity-100'
+                        <div className={`browser-content ${
+                            browserState.isMinimized ? 'minimized' : 'normal'
                         }`}>
                             {projectIdFromURL && terminalSocket && !browserState.isMinimized ? (
                                 <Browser projectId={projectIdFromURL} />
                             ) : !browserState.isMinimized ? (
-                                <div className="h-full flex items-center justify-center">
-                                    <div className="text-center p-8">
-                                        <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mb-4 mx-auto">
-                                            <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="browser-placeholder">
+                                    <div className="browser-placeholder-content">
+                                        <div className="browser-placeholder-icon">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
                                             </svg>
                                         </div>
-                                        <h3 className="text-slate-300 text-lg mb-2">Browser Preview</h3>
-                                        <p className="text-slate-500 text-sm">
+                                        <h3 className="browser-placeholder-title">Browser Preview</h3>
+                                        <p className="browser-placeholder-text">
                                             {!projectIdFromURL ? "No project loaded" : "Waiting for terminal connection..."}
                                         </p>
                                     </div>
@@ -310,17 +311,17 @@ export default function ProjectPlayGround() {
                     </div>
                 </div>
             ) : (
-                <div className="fixed top-4 right-4 z-50">
+                <div className="restore-button">
                     <button 
                         onClick={handleBrowserRestore}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-2 rounded-lg transition-colors"
+                        className="restore-button-content"
                         title="Restore Browser Panel"
                     >
-                        <div className="flex items-center gap-2 text-slate-300">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="restore-button-inner">
+                            <svg className="restore-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span className="text-sm">Show Browser</span>
+                            <span className="restore-button-text">Show Browser</span>
                         </div>
                     </button>
                 </div>
