@@ -4,14 +4,21 @@ import { Button } from '@/components/ui/button';
 import { useGetProjectsStore } from '@/store/getProjectsStore';
 import { useEffect, useState } from 'react';
 import './CreateProject.css';
+import { ProjectTypeCard } from '@/components/atoms/ProjectCard/ProjectTypeCard';
+import { projectTypesArray } from '@/utils/projectTyprUtils';
+import { ProjectCreateModal } from '@/components/molecules/ProjectCreateModal/ProjectCreateModal';
 
 export function CreateProject() {
     const { isPending, createProjectMutation } = useCreateProject();
     const { projects, setProjects } = useGetProjectsStore();
     const [projectList, setProjectList] = useState(null);
     const [projectName, setProjectName] = useState("");
+    const [projectType, setProjectType] = useState("react"); 
     const [showForm, setShowForm] = useState(false);
     const navigate = useNavigate();
+
+    // Project type configurations
+    const projectTypes = projectTypesArray;
 
     async function handleClick() {
         if (!showForm) {
@@ -19,9 +26,9 @@ export function CreateProject() {
             return;
         }
         
-        // If form is showing, this means we're in "quick create" mode
+        // Quick create with selected type
         try {
-            const response = await createProjectMutation();
+            const response = await createProjectMutation({ type: projectType });
             console.log(response.data);
             navigate(`/project/${response?.data}`)
         } catch (error) {
@@ -37,8 +44,11 @@ export function CreateProject() {
         }
 
         try {
-            const response = await createProjectMutation({ name: projectName });
-            console.log("Created project with name:", projectName, response.data);
+            const response = await createProjectMutation({ 
+                name: projectName, 
+                type: projectType 
+            });
+            console.log("Created project:", { name: projectName, type: projectType }, response.data);
             navigate(`/project/${response?.data}`);
         } catch (error) {
             console.log(error);
@@ -48,6 +58,7 @@ export function CreateProject() {
     function handleCancel() {
         setShowForm(false);
         setProjectName("");
+        setProjectType("react");
     }
 
     useEffect(() => {
@@ -59,9 +70,7 @@ export function CreateProject() {
         setProjectList(projects.data);
     }
 
-    function handleOpenExistingProject(projectId) {
-        navigate(`/project/${projectId}`)
-    }
+    
 
     if (isPending) {
         return (
@@ -73,7 +82,10 @@ export function CreateProject() {
                         <div className="loading-dot"></div>
                     </div>
                     <h2 className="loading-title">
-                        {projectName ? `Creating "${projectName}"...` : "Loading..."}
+                        {projectName ? 
+                            `Creating "${projectName}" (${projectType.toUpperCase()})...` : 
+                            `Creating ${projectType.toUpperCase()} project...`
+                        }
                     </h2>
                 </div>
             </div>
@@ -115,16 +127,40 @@ export function CreateProject() {
                     ) : (
                         <div className="project-form-container">
                             <form onSubmit={handleFormSubmit} className="project-form">
-                                <div className="form-input-group">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter project name"
-                                        value={projectName}
-                                        onChange={(e) => setProjectName(e.target.value)}
-                                        className="project-name-input"
-                                        autoFocus
-                                    />
+                                {/* Project Type Selection */}
+                                <div className="form-section">
+                                    <label className="form-label">Choose Project Type</label>
+                                    <div className="project-types-grid">
+                                        {projectTypes.map((type) => (
+                                            <ProjectTypeCard
+                                                key={type.type}
+                                                type={type.type}
+                                                title={type.title}
+                                                description={type.description}
+                                                icon={type.icon}
+                                                selected={projectType === type.type}
+                                                onSelect={() => setProjectType(type.type)}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
+
+                                {/* Project Name Input */}
+                                <div className="form-section">
+                                    <label className="form-label">Project Name</label>
+                                    <div className="form-input-group">
+                                        <input
+                                            type="text"
+                                            placeholder="Enter project name"
+                                            value={projectName}
+                                            onChange={(e) => setProjectName(e.target.value)}
+                                            className="project-name-input"
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Form Buttons */}
                                 <div className="form-buttons">
                                     <button 
                                         type="button" 
@@ -141,7 +177,7 @@ export function CreateProject() {
                                         <svg className="btn-icon" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
-                                        Create Project
+                                        Create {projectType === "react" ? "React" : "Next.js"} Project
                                     </button>
                                 </div>
                             </form>
@@ -153,7 +189,7 @@ export function CreateProject() {
                                     onClick={handleClick}
                                     className="quick-create-btn"
                                 >
-                                    Quick Create (Auto-generated name)
+                                    Quick Create {projectType === "react" ? "React" : "Next.js"} (Auto-generated name)
                                 </button>
                             </div>
                         </div>
@@ -162,51 +198,7 @@ export function CreateProject() {
 
                 {/* Projects List */}
                 {projectList && (
-                    <div className="projects-container">
-                        <div className="projects-header">
-                            <h3 className="projects-title">
-                                <svg className="projects-title-icon" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                </svg>
-                                Your Projects ({projectList.length})
-                            </h3>
-                        </div>
-                        
-                        <div className="projects-content">
-                            {projectList.length > 0 ? (
-                                <div className="projects-grid">
-                                    {projectList.map((project, index) => (
-                                        <div
-                                            key={index}
-                                            className="project-item"
-                                            onClick={() => handleOpenExistingProject(project.id)}
-                                        >
-                                            <div className="project-item-content">
-                                                <div className="project-item-left">
-                                                    <div className="project-indicator"></div>
-                                                    <span className="project-name">
-                                                        {project.name}
-                                                    </span>
-                                                </div>
-                                                <svg className="project-arrow" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="empty-state">
-                                    <svg className="empty-state-icon" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                    </svg>
-                                    <p className="empty-state-title">No projects found</p>
-                                    <p className="empty-state-subtitle">Create your first project to get started</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+                    ProjectCreateModal(projectList)               )}
             </div>
         </div>
     );

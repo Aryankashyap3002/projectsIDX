@@ -1,10 +1,10 @@
 import axios from "../config/axiosConfig";
 
-export default async function createProjectApi ({name}) {
+export default async function createProjectApi ({name, type}) {
     console.log("Project Name is: ",name);
     try {
         
-        const response = await axios.post('/api/v1/projects', {name: name});
+        const response = await axios.post('/api/v1/projects', {name: name, type: type});
         console.log(response.data);
         return response.data;
     } catch (error) {
