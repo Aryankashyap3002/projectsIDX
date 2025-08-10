@@ -13,7 +13,7 @@ export function CreateProject() {
     const { projects, setProjects } = useGetProjectsStore();
     const [projectList, setProjectList] = useState(null);
     const [projectName, setProjectName] = useState("");
-    const [projectType, setProjectType] = useState("react"); 
+    const [projectType, setProjectType] = useState("react"); // Default to react
     const [showForm, setShowForm] = useState(false);
     const navigate = useNavigate();
 
@@ -198,7 +198,8 @@ export function CreateProject() {
 
                 {/* Projects List */}
                 {projectList && (
-                    ProjectCreateModal(projectList)               )}
+                    <ProjectCreateModal projectList={projectList} />               
+                )}
             </div>
         </div>
     );
