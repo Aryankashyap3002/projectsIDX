@@ -13,7 +13,7 @@ export function CreateProject() {
     const { projects, setProjects } = useGetProjectsStore();
     const [projectList, setProjectList] = useState(null);
     const [projectName, setProjectName] = useState("");
-    const [projectType, setProjectType] = useState("react"); // Default to react
+    const [projectType, setProjectType] = useState("react"); 
     const [showForm, setShowForm] = useState(false);
     const navigate = useNavigate();
 
@@ -70,7 +70,11 @@ export function CreateProject() {
         setProjectList(projects.data);
     }
 
-    
+    // Helper function to get display name for project type
+    function getProjectTypeDisplayName(type) {
+        const typeObj = projectTypes.find(pt => pt.type === type);
+        return typeObj ? typeObj.title : type;
+    }
 
     if (isPending) {
         return (
@@ -83,8 +87,8 @@ export function CreateProject() {
                     </div>
                     <h2 className="loading-title">
                         {projectName ? 
-                            `Creating "${projectName}" (${projectType.toUpperCase()})...` : 
-                            `Creating ${projectType.toUpperCase()} project...`
+                            `Creating "${projectName}" (${getProjectTypeDisplayName(projectType)})...` : 
+                            `Creating ${getProjectTypeDisplayName(projectType)} project...`
                         }
                     </h2>
                 </div>
@@ -139,7 +143,7 @@ export function CreateProject() {
                                                 description={type.description}
                                                 icon={type.icon}
                                                 selected={projectType === type.type}
-                                                onSelect={() => setProjectType(type.type)}
+                                                onSelect={() => setProjectType(type.type)} 
                                             />
                                         ))}
                                     </div>
@@ -177,7 +181,7 @@ export function CreateProject() {
                                         <svg className="btn-icon" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
-                                        Create {projectType === "react" ? "React" : "Next.js"} Project
+                                        Create {getProjectTypeDisplayName(projectType)} Project {/* ✅ Fixed: Use helper function */}
                                     </button>
                                 </div>
                             </form>
@@ -189,7 +193,7 @@ export function CreateProject() {
                                     onClick={handleClick}
                                     className="quick-create-btn"
                                 >
-                                    Quick Create {projectType === "react" ? "React" : "Next.js"} (Auto-generated name)
+                                    Quick Create {getProjectTypeDisplayName(projectType)} (Auto-generated name) {/* ✅ Fixed: Use helper function */}
                                 </button>
                             </div>
                         </div>

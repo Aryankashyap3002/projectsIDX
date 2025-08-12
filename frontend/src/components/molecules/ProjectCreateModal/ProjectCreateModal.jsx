@@ -1,10 +1,22 @@
 import { useNavigate } from "react-router-dom"
 
-export function ProjectCreateModal({ projectList }) {  // ✅ Destructure props properly
+export function ProjectCreateModal({ projectList }) {
     const navigate = useNavigate();
 
     function handleOpenExistingProject(projectId) {
         navigate(`/project/${projectId}`);
+    }
+
+    // Helper function to get the correct display name for project type
+    function getProjectTypeDisplayName(type) {
+        switch(type) {
+            case "react":
+                return "React";
+            case "next":
+                return "Next.js";
+            default:
+                return type || "React"; // fallback to React if type is undefined
+        }
     }
 
     return (
@@ -23,7 +35,7 @@ export function ProjectCreateModal({ projectList }) {  // ✅ Destructure props 
                     <div className="projects-grid">
                         {projectList.map((project, index) => (
                             <div
-                                key={project.id || index}  // ✅ Use project.id as key if available
+                                key={project.id || index}
                                 className="project-item"
                                 onClick={() => handleOpenExistingProject(project.id)}
                             >
@@ -35,7 +47,7 @@ export function ProjectCreateModal({ projectList }) {  // ✅ Destructure props 
                                                 {project.name}
                                             </span>
                                             <span className="project-type-badge">
-                                                {project.type === "next" ? "Next.js" : "React"}
+                                                {getProjectTypeDisplayName(project.type)} {/* ✅ Fixed: Now shows correct type */}
                                             </span>
                                         </div>
                                     </div>

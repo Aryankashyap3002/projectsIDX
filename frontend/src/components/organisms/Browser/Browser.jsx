@@ -16,13 +16,13 @@ export const Browser = ({ projectId }) => {
             console.log("Port not found, fetching after delay");
             editorSocket.emit("getPort", { containerName: projectId});
         }, 100);
+        
 
         return () => clearTimeout(timer);
 
-        // editorSocket?.emit("getPort", {
-        //     containerName: projectId
-        // })
     }
+
+    console.log("Port attached to browser is: ", port);
 }, [port, editorSocket, projectId]);
 
     if(!port) {
