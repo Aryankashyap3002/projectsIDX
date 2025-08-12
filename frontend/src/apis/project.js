@@ -1,10 +1,10 @@
-import axios from "../config/axiosConfig";
+import { projectBackendInstance } from "../config/axiosConfig";
 
 export default async function createProjectApi ({name, type}) {
     console.log("Project Name is: ",name);
     try {
         
-        const response = await axios.post('/api/v1/projects', {name: name, type: type});
+        const response = await projectBackendInstance.post('/api/v1/projects', {name: name, type: type});
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -15,7 +15,7 @@ export default async function createProjectApi ({name, type}) {
 
 export async function getProjectTree ({ projectId }) {
     try {
-        const response = await axios.get(`/api/v1/projects/${projectId}/tree`);
+        const response = await projectBackendInstance.get(`/api/v1/projects/${projectId}/tree`);
         console.log("projectTree response ", response.data?.data);
         return response.data?.data;
     } catch (error) {
@@ -26,7 +26,7 @@ export async function getProjectTree ({ projectId }) {
 
 export async function getAllProjects () {
     try {
-        const response = await axios.get('/api/v1/projects/allProjects');
+        const response = await projectBackendInstance.get('/api/v1/projects/allProjects');
         console.log("Projects are: ", response.data?.data);
         return response.data;
     } catch (error) {

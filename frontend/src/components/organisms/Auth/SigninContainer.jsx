@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react';
  import { useSignin } from '@/hooks/apis/auth/useSignin';
 
  import { SigninCard } from './SigninCard';
+import { useAuth } from '@/hooks/context/useAuth';
  
  export const SigninContainer = () => {
  
      const navigate = useNavigate();
+
+     const { auth } = useAuth();
  
      const [validationError, setValidationError] = useState(null);
  
@@ -36,7 +39,8 @@ import { useEffect, useState } from 'react';
      useEffect(() => {
          if(isSuccess) {
              setTimeout(() => {
-                 navigate('/home');
+                console.log("User is: ", auth.user);
+                 navigate('/');
              }, 3000);
          }
              

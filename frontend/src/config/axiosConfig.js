@@ -1,7 +1,9 @@
 import axios from "axios";
 
-const axiosInstance = axios.create({
+export const projectBackendInstance = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL
 });
 
-export default axiosInstance;
+export const userBackendInstance = axios.create({
+    baseURL: import.meta.env.VITE_BACKEND_API_URL
+});

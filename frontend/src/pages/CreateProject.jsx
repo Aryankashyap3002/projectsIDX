@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCreateProject } from "../hooks/apis/mutation/useCreateProject";
 import { Button } from '@/components/ui/button';
 import { useGetProjectsStore } from '@/store/getProjectsStore';
+import { useAuth } from '@/hooks/context/useAuth'; 
 import { useEffect, useState } from 'react';
 import './CreateProject.css';
 import { ProjectTypeCard } from '@/components/atoms/ProjectCard/ProjectTypeCard';
@@ -11,13 +12,18 @@ import { ProjectCreateModal } from '@/components/molecules/ProjectCreateModal/Pr
 export function CreateProject() {
     const { isPending, createProjectMutation } = useCreateProject();
     const { projects, setProjects } = useGetProjectsStore();
+    const { auth } = useAuth(); 
     const [projectList, setProjectList] = useState(null);
     const [projectName, setProjectName] = useState("");
     const [projectType, setProjectType] = useState("react"); 
     const [showForm, setShowForm] = useState(false);
     const navigate = useNavigate();
 
-    // Project type configurations
+    // Update these to use auth data
+    const isSignedIn = !!auth?.user; // Check if user exists
+    const userName = auth?.user?.username || "Guest";
+    const userAvatar = auth?.user?.avatar;
+
     const projectTypes = projectTypesArray;
 
     async function handleClick() {
@@ -26,7 +32,6 @@ export function CreateProject() {
             return;
         }
         
-        // Quick create with selected type
         try {
             const response = await createProjectMutation({ type: projectType });
             console.log(response.data);
@@ -61,16 +66,31 @@ export function CreateProject() {
         setProjectType("react");
     }
 
+    function handleUserProfileClick() {
+        if (isSignedIn) {
+            // Handle signed-in user actions (profile dropdown, etc.)
+            console.log("User profile clicked - show dropdown or profile page");
+        } else {
+            // Redirect to signin page
+            navigate('/auth/signin');
+        }
+    }
+
+    function getUserInitial() {
+        return userName ? userName.charAt(0).toUpperCase() : 'U';
+    }
+
     useEffect(() => {
         setProjects();
-    }, []);
+        // Log user data for debugging
+        console.log("User is: ", auth?.user);
+    }, [auth]);
 
     function handleProjects() {
         console.log(projects.data);
         setProjectList(projects.data);
     }
 
-    // Helper function to get display name for project type
     function getProjectTypeDisplayName(type) {
         const typeObj = projectTypes.find(pt => pt.type === type);
         return typeObj ? typeObj.title : type;
@@ -99,6 +119,51 @@ export function CreateProject() {
     return (
         <div className="main-container">
             <div className="content-wrapper">
+                <div className="top-nav">
+                    <div className="nav-content">
+                        <div className="logo-section">
+                            <h2 className="logo-text">ProjectHub</h2>
+                        </div>
+                        
+                        <div className="user-profile-section">
+                            <button 
+                                onClick={handleUserProfileClick}
+                                className="user-avatar-btn"
+                                title={isSignedIn ? `Signed in as ${userName}` : 'Sign in'}
+                            >
+                                <div className={`user-avatar ${isSignedIn ? 'signed-in' : 'guest'}`}>
+                                    {isSignedIn && userAvatar ? (
+                                        <img 
+                                            src={userAvatar} 
+                                            alt={`${userName}'s avatar`}
+                                            className="user-avatar-img"
+                                            onError={(e) => {
+                                                // Fallback to initials if image fails to load
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling.style.display = 'flex';
+                                            }}
+                                        />
+                                    ) : null}
+                                    {isSignedIn && !userAvatar ? (
+                                        <span className="user-initial">{getUserInitial()}</span>
+                                    ) : null}
+                                    {isSignedIn && userAvatar ? (
+                                        <span className="user-initial" style={{display: 'none'}}>{getUserInitial()}</span>
+                                    ) : null}
+                                    {!isSignedIn ? (
+                                        <svg className="guest-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    ) : null}
+                                </div>
+                                {!isSignedIn && (
+                                    <span className="signin-text">Sign In</span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Header Section */}
                 <div className="header-section">
                     <h1 className="main-title">Project Manager</h1>
@@ -181,7 +246,7 @@ export function CreateProject() {
                                         <svg className="btn-icon" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
-                                        Create {getProjectTypeDisplayName(projectType)} Project {/* ✅ Fixed: Use helper function */}
+                                        Create {getProjectTypeDisplayName(projectType)} Project
                                     </button>
                                 </div>
                             </form>
@@ -193,7 +258,7 @@ export function CreateProject() {
                                     onClick={handleClick}
                                     className="quick-create-btn"
                                 >
-                                    Quick Create {getProjectTypeDisplayName(projectType)} (Auto-generated name) {/* ✅ Fixed: Use helper function */}
+                                    Quick Create {getProjectTypeDisplayName(projectType)} (Auto-generated name)
                                 </button>
                             </div>
                         </div>
