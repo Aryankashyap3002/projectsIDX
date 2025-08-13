@@ -1,5 +1,5 @@
 import { getAllProjects } from "@/apis/project";
-import { getUserProjects } from "@/apis/auth"; // New user service API
+import { getUserProjects } from "@/apis/auth"; // User service API
 import { QueryClient } from "@tanstack/react-query";
 import { create } from "zustand";
 import { toast } from "sonner";
@@ -12,28 +12,16 @@ export const useGetProjectsStore = create((set, get) => {
         isLoading: false,
         error: null,
         
-        // Your original method - now fetches from user service instead
-        setProjects: async (useUserService = true) => {
+        // Updated to use user service by default
+        setProjects: async (filters = {}) => {
             set({ isLoading: true, error: null });
             
             try {
-                let data;
-                
-                if (useUserService) {
-                    // Fetch from user service (recommended - shows user's projects)
-                    console.log('Fetching projects from user service...');
-                    data = await queryClient.fetchQuery({
-                        queryKey: ['userProjects'],
-                        queryFn: () => getUserProjects()
-                    });
-                } else {
-                    // Fallback to project service (your original method)
-                    console.log('Fetching projects from project service...');
-                    data = await queryClient.fetchQuery({
-                        queryKey: ['projects'],
-                        queryFn: () => getAllProjects()
-                    });
-                }
+                console.log('Fetching projects from user service...');
+                const data = await queryClient.fetchQuery({
+                    queryKey: ['userProjects', filters],
+                    queryFn: () => getUserProjects(filters)
+                });
 
                 set({
                     projects: data,
@@ -62,14 +50,36 @@ export const useGetProjectsStore = create((set, get) => {
             }
         },
 
-        // Keep your original method as fallback
+        // Fallback method to use project service (your original method)
         setProjectsFromProjectService: async () => {
-            return get().setProjects(false);
-        },
+            set({ isLoading: true, error: null });
+            
+            try {
+                console.log('Fetching projects from project service...');
+                const data = await queryClient.fetchQuery({
+                    queryKey: ['projects'],
+                    queryFn: () => getAllProjects()
+                });
 
-        // New method specifically for user service
-        setUserProjects: async () => {
-            return get().setProjects(true);
+                set({
+                    projects: data,
+                    isLoading: false,
+                    error: null
+                });
+
+                return data;
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+                
+                set({
+                    projects: null,
+                    isLoading: false,
+                    error: error.message || 'Failed to fetch projects'
+                });
+
+                toast.error('Failed to load projects. Please try again.');
+                throw error;
+            }
         },
 
         // Additional utility methods
@@ -81,15 +91,10 @@ export const useGetProjectsStore = create((set, get) => {
             });
         },
 
-        refreshProjects: async (useUserService = true) => {
+        refreshProjects: async (filters = {}) => {
             // Clear cache and refetch
-            if (useUserService) {
-                queryClient.removeQueries(['userProjects']);
-            } else {
-                queryClient.removeQueries(['projects']);
-            }
-            
-            return get().setProjects(useUserService);
+            queryClient.removeQueries(['userProjects']);
+            return get().setProjects(filters);
         }
     }
 })
