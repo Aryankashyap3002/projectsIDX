@@ -35,9 +35,9 @@ export function ProjectCreateModal({ projectList }) {
                     <div className="projects-grid">
                         {projectList.map((project, index) => (
                             <div
-                                key={project.id || index}
+                                key={project.projectId || index}
                                 className="project-item"
-                                onClick={() => handleOpenExistingProject(project.id)}
+                                onClick={() => handleOpenExistingProject(project.projectId)}
                             >
                                 <div className="project-item-content">
                                     <div className="project-item-left">

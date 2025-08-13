@@ -29,13 +29,12 @@ export const signInRequest = async ({ email, password }) => {
 };
 
 // Project-related functions for user service (using your existing endpoints)
-export const getUserProjects = async (filters = {}) => {
+export const getUserProjects = async ({ token }) => {
     try {
         const response = await userBackendInstance.get('/projects', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            params: filters // Send filters as query parameters
+                'x-access-token': token
+            }
         });
         return response.data;
     } catch(error) {
@@ -44,11 +43,12 @@ export const getUserProjects = async (filters = {}) => {
     }
 };
 
-export const createUserProject = async ({ name, type, token }) => {
+export const createUserProject = async ({ name, type, projectId, token }) => {
     try {
         const response = await userBackendInstance.post('/projects', {
             name,
-            type
+            type,
+            projectId
         }, {
             headers: {
                 'x-access-token': token

@@ -13,7 +13,7 @@ export const useGetProjectsStore = create((set, get) => {
         error: null,
         
         // Your original method - now fetches from user service instead
-        setProjects: async (useUserService = true) => {
+        setProjects: async ({useUserService = true, token}) => {
             set({ isLoading: true, error: null });
             
             try {
@@ -24,7 +24,7 @@ export const useGetProjectsStore = create((set, get) => {
                     console.log('Fetching projects from user service...');
                     data = await queryClient.fetchQuery({
                         queryKey: ['userProjects'],
-                        queryFn: () => getUserProjects()
+                        queryFn: () => getUserProjects({token})
                     });
                 } else {
                     // Fallback to project service (your original method)

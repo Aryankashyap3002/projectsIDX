@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useCreateProject } from "../hooks/apis/mutation/useCreateProject";
 import { Button } from '@/components/ui/button';
-import { useGetProjectsStore } from '@/store/getProjectsStore'; // Your existing store
+import { useGetProjectsStore } from '@/store/getProjectsStore';
 import { useAuth } from '@/hooks/context/useAuth'; 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -14,11 +14,11 @@ import { useCreateProject2 } from '@/hooks/apis/mutation/useCreateProject2';
 export function CreateProject() {
     const { isPending, createProjectMutation } = useCreateProject();
     const { createProjectMutationUser } = useCreateProject2();
+    const [ projectDetail , setProjectDetail]  = useState([]);
     const { 
         projects, 
         isLoading: isLoadingProjects,
         setProjects, // Your existing method - now uses user service by default
-        clearProjects 
     } = useGetProjectsStore();
     const { auth, logout } = useAuth(); 
     const [projectName, setProjectName] = useState("");
@@ -114,6 +114,7 @@ export function CreateProject() {
                 createProjectMutationUser({
                     name: projectName.trim(), 
                     type: projectType,
+                    projectId: projectId,
                     token: auth.token,
                 })
                 navigate(`/project/${projectId}`);
@@ -143,7 +144,7 @@ export function CreateProject() {
 
     function handleLogout() {
         logout();
-        clearProjects(); // Clear projects on logout
+        // clearProjects(); // Clear projects on logout
         setShowUserDropdown(false);
         toast.success('Successfully signed out');
         // Optionally redirect to home or signin page
@@ -169,9 +170,13 @@ export function CreateProject() {
     // Clear projects when user logs out
     useEffect(() => {
         if (!isSignedIn && !isLoading) {
-            clearProjects();
+            // clearProjects();
         }
-    }, [isSignedIn, isLoading, clearProjects]);
+    }, [isSignedIn, isLoading]);
+
+    useEffect(() => {
+        console.log("Project details: ", projects);
+    }, []);
 
     async function handleProjects() {
         // Check authentication before proceeding
@@ -179,8 +184,13 @@ export function CreateProject() {
 
         try {
             console.log('Loading user projects...');
-            const result = await setProjects(); // Now fetches from user service by default
-            console.log('Projects loaded:', result);
+            console.log("Auth token is: ", auth.token);
+            const result = await setProjects({
+                token: auth.token
+            }); // Now fetches from user service by default
+            setProjectDetail(result?.data);
+            console.log('Projects loaded:', result?.data);
+            
             
             if (result?.data?.length > 0) {
                 setShowProjectsModal(true);
@@ -194,10 +204,15 @@ export function CreateProject() {
     }
 
     // Handle project selection from modal
-    async function handleProjectSelect(project) {
+    async function handleProjectSelect() {
         try {
             // Navigate to project using the MongoDB _id (since everything is in one service now)
-            navigate(`/project/${project._id}`);
+            const result = await setProjects({
+                token: auth.token
+            }); // Now fetches from user service by default
+            console.log('Projects loaded:', result);
+            console.log("project details", result);
+            navigate(`/project/${result.projectId}`);
             setShowProjectsModal(false);
         } catch (error) {
             console.error('Error accessing project:', error);
@@ -467,7 +482,7 @@ export function CreateProject() {
                 {/* Projects Modal */}
                 {showProjectsModal && isSignedIn && projects?.data && (
                     <ProjectCreateModal 
-                        projectList={projects.data} 
+                        projectList={projectDetail} 
                         onProjectSelect={handleProjectSelect}
                         onClose={() => setShowProjectsModal(false)}
                     />               

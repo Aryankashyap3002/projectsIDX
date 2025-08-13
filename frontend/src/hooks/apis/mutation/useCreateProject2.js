@@ -7,10 +7,10 @@ export const useCreateProject2 = () => {
     const { auth } = useAuth();
     
     const { isPending, isSuccess, error, mutateAsync: createProjectMutationUser } = useMutation({
-        mutationFn: async ({ name, type, token }) => {
+        mutationFn: async ({ name, type, projectId, token }) => {
             // Create project directly in user service (your existing endpoint)
             console.log('Creating project in user service...');
-            const response = await createUserProject({ name, type, token });
+            const response = await createUserProject({ name, type, projectId, token });
             console.log('User service response:', response);
             
             return response;
