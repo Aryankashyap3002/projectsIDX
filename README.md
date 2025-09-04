@@ -34,3 +34,4 @@ ProjectsIDX is a full-stack collaborative **web IDE** designed to simplify web d
 
 
 ![ProjectsIDX Demo](./project1.png)
+<img width="722" alt="Screenshot 2024-12-17 at 11 35 36 PM" src="./project1.png" />
