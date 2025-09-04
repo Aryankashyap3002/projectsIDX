@@ -37,6 +37,12 @@ const projectSchema = new mongoose.Schema(
                 type: String
             }
         },
+
+        projectId: {
+            type: String,
+            required: true,
+            trim: true
+        },
         
         config: {
             framework: String,

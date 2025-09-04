@@ -54,12 +54,6 @@ export const handleContainerCreate = async (projectId, terminalSocket, req, tcpS
 
         await container.start();
 
-        // console.log("Container is started");
-
-        // terminalSocket.handleUpgrade(req, tcpSocket, head, (establishedWSConn) => {
-        //     terminalSocket.emit("connection", establishedWSConn, req, container);
-        // })
-
         return container;
 
     } catch (error) {
@@ -72,7 +66,6 @@ export async function getContainerPort(containerName) {
     const allContainers = await dockerode.listContainers({ all: true });
 
     const existingContainer = allContainers.find(container => {
-            // Docker container names start with '/', so we check both formats
             return container.Names.some(name => 
                 name === `/${containerName}` || name === containerName
             );

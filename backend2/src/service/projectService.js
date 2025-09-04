@@ -59,11 +59,13 @@ export const getProjectsService = async (userId) => {
     let projects = await projectRepository.getByUserId(userId);
     let projectContainer;
 
-    if(projects) {
-      projectContainer = projects.map((ele) => ({
-        name: ele.name
-      }))
+    if (projects) {
+      projectContainer = projects.map(ele => ({
+        name: ele.name,
+        projectId: ele.projectId
+      }));
     }
+
     
     console.log("Projects are: ", projectContainer);
 
