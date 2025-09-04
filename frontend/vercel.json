@@ -1,0 +1,18 @@
+{
+  "build": {
+    "env": {
+      "MY_CUSTOM_VARIABLE": "value"
+    }
+  },
+  "rewrites": [
+    { "source": "/old-path", "destination": "/new-path" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    }
+  ]
+}
