@@ -18,9 +18,9 @@ ProjectsIDX is a full-stack collaborative **web IDE** designed to simplify web d
 ---
 
 ## 🛠️ Tech Stack
-- **Frontend:** React.js, Vite, Zustand, TailwindCSS, Ant Design, Socket.IO  
+- **Frontend:** React.js, Vite, Zustand, TailwindCSS, Ant Design, Socket.IO, Websocket
 - **Backend:** Node.js, Express.js, MongoDB, Bull (queues), AWS SDK, Razorpay (planned for monetization)  
-- **DevOps & Infra:** Docker, Bull Board, Redis  
+- **DevOps & Infra:** Docker, Bull Board, Redis , Socket.IO, Websocket  
 - **Others:** Monaco Editor, Xterm.js  
 
 ---
@@ -29,5 +29,5 @@ ProjectsIDX is a full-stack collaborative **web IDE** designed to simplify web d
 ```bash
 .
 ├── frontend     # React + Vite frontend (UI, Monaco, Socket connections)
-├── backend      # Core backend for project handling & container creation
-├── backend2     # Extended backend (auth, queues, DB, mail service)
+├── projectService      # Core backend for project handling & container creation
+├── userService     # Extended backend (auth, queues, DB, mail service)
