@@ -31,3 +31,6 @@ ProjectsIDX is a full-stack collaborative **web IDE** designed to simplify web d
 ├── frontend     # React + Vite frontend (UI, Monaco, Socket connections)
 ├── projectService      # Core backend for project handling & container creation
 ├── userService     # Extended backend (auth, queues, DB, mail service)
+
+
+/home/aryankashyap/Pictures/Screenshots/project1.png
