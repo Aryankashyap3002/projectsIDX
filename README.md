@@ -32,6 +32,6 @@ ProjectsIDX is a full-stack collaborative **web IDE** designed to simplify web d
 ├── projectService      # Core backend for project handling & container creation
 ├── userService     # Extended backend (auth, queues, DB, mail service)
 
-
+<img width="722" alt="Screenshot 2024-12-17 at 11 35 36 PM" src="https://github.com/Aryankashyap3999/projectsIDX/blob/master/project1.png" />
 ![ProjectsIDX Demo](project1.png)
 
